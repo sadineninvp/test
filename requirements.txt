@@ -1,0 +1,27 @@
+# Phase 1: Computer Action Agent
+# Core dependencies (using built-in libraries where possible)
+
+# Note: For Phase 1, we use Python standard library primarily:
+# - subprocess (built-in)
+# - sqlite3 (built-in)
+# - pathlib (built-in)
+# - json (built-in)
+
+# Phase 2: Command Center
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+
+# Phase 3: LLM Integration
+openai>=1.0.0  # OpenAI API client for function calling
+
+# Phase 4: Local Client
+requests>=2.31.0  # HTTP client for API calls
+
+# Web Search Layer
+ddgs>=0.1.0  # DuckDuckGo search
+beautifulsoup4>=4.12.0  # HTML parsing
+
+# Future dependencies for later phases:
+# psutil>=5.9.0  # System/process monitoring (Phase 1, Step 3)
+# playwright>=1.40.0  # UI automation (Phase 1, Step 5)
