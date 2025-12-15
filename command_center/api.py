@@ -12,6 +12,7 @@ from typing import Optional
 
 from .command_center import CommandCenter  # Phase 2
 from .llm_command_center import LLMCommandCenter  # Phase 3
+from .conversation_state import ConversationState
 from action_agent import StateManager
 
 app = FastAPI(
@@ -22,7 +23,7 @@ app = FastAPI(
 
 # Session storage (in-memory, per-process)
 # In production, use Redis or database for persistence
-_sessions: dict = {}  # {session_id: {"v2": CommandCenter, "v3": LLMCommandCenter, "state_manager": StateManager}}
+_sessions: dict = {}  # {session_id: {"v2": CommandCenter, "v3": LLMCommandCenter, "state_manager": StateManager, "conversation_state": ConversationState}}
 
 
 def get_or_create_session(session_id: Optional[str] = None) -> tuple[str, dict]:
@@ -36,10 +37,12 @@ def get_or_create_session(session_id: Optional[str] = None) -> tuple[str, dict]:
         # Create new session
         session_id = str(uuid.uuid4())
         state_manager = StateManager(session_id=session_id)
+        conversation_state = ConversationState(session_id=session_id)
         _sessions[session_id] = {
             "v2": None,  # Lazy init
             "v3": None,  # Lazy init
-            "state_manager": state_manager
+            "state_manager": state_manager,
+            "conversation_state": conversation_state
         }
     
     return session_id, _sessions[session_id]
@@ -64,11 +67,14 @@ def get_command_center_v3(session_data: Optional[dict] = None) -> LLMCommandCent
                     detail="OPENAI_API_KEY environment variable not set. Phase 3 requires OpenAI API key."
                 )
             state_manager = session_data["state_manager"]
+            conversation_state = session_data["conversation_state"]
             session_data["v3"] = LLMCommandCenter(
                 api_key=api_key,
                 executor=None,  # Will create with state_manager
                 service_manager=None,
-                web_tools=None
+                web_tools=None,
+                file_tools=None,
+                conversation_state=conversation_state
             )
             # Update executor to use state_manager
             from action_agent import CommandExecutor

@@ -36,8 +36,11 @@ class LLMClient:
         
         self.model = model
         
-        # Initialize OpenAI client
-        client_kwargs = {"api_key": self.api_key}
+        # Initialize OpenAI client with 30 minute timeout
+        client_kwargs = {
+            "api_key": self.api_key,
+            "timeout": 1800.0  # 30 minutes (1800 seconds)
+        }
         if base_url:
             client_kwargs["base_url"] = base_url
         

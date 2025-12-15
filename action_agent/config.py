@@ -14,7 +14,7 @@ LOG_DIR.mkdir(exist_ok=True)
 LOG_FILE = LOG_DIR / "action_agent.log"
 
 # Command execution settings
-DEFAULT_TIMEOUT = 300  # 5 minutes
+DEFAULT_TIMEOUT = 1800  # 30 minutes
 MAX_OUTPUT_SIZE = 10 * 1024 * 1024  # 10MB max output
 
 # Allowed command prefixes (for security - can be expanded)

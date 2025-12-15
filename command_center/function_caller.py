@@ -5,7 +5,7 @@ Function Caller - Execute LLM function calls by calling Action Agent functions
 import json
 from typing import Dict, Any, Optional, Callable, List
 
-from action_agent import CommandExecutor, ServiceManager, WebTools
+from action_agent import CommandExecutor, ServiceManager, WebTools, FileTools
 from .tool_definitions import get_tool_name_to_function_map
 
 
@@ -18,7 +18,8 @@ class FunctionCaller:
         self,
         executor: Optional[CommandExecutor] = None,
         service_manager: Optional[ServiceManager] = None,
-        web_tools: Optional[WebTools] = None
+        web_tools: Optional[WebTools] = None,
+        file_tools: Optional[FileTools] = None
     ):
         """
         Initialize function caller
@@ -27,10 +28,12 @@ class FunctionCaller:
             executor: CommandExecutor instance
             service_manager: ServiceManager instance
             web_tools: WebTools instance
+            file_tools: FileTools instance
         """
         self.executor = executor or CommandExecutor()
         self.service_manager = service_manager or ServiceManager(executor=self.executor)
         self.web_tools = web_tools or WebTools()
+        self.file_tools = file_tools or FileTools()
         self.tool_map = get_tool_name_to_function_map()
         
         # Map tool names to actual functions
@@ -45,6 +48,9 @@ class FunctionCaller:
             "fetch_url": self.web_tools.fetch_url,
             "change_directory": self.executor.change_directory,
             "get_current_directory": self.executor.get_current_directory,
+            "read_file": self.file_tools.read_file,
+            "write_file": self.file_tools.write_file,
+            "list_files": self.file_tools.list_files,
         }
     
     def call_function(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
@@ -110,8 +116,26 @@ class FunctionCaller:
                 elif "path" in arguments:
                     # change_directory
                     result = func(arguments["path"])
+                elif "file_path" in arguments:
+                    # read_file or write_file
+                    if "content" in arguments:
+                        # write_file
+                        result = func(
+                            arguments["file_path"],
+                            arguments["content"],
+                            arguments.get("append", False)
+                        )
+                    else:
+                        # read_file
+                        result = func(
+                            arguments["file_path"],
+                            arguments.get("analyze_structure", True)
+                        )
+                elif "directory" in arguments:
+                    # list_files with directory specified
+                    result = func(arguments["directory"])
                 elif len(arguments) == 0:
-                    # No arguments (e.g., get_system_info, get_current_directory)
+                    # No arguments (e.g., get_system_info, get_current_directory, list_files)
                     result = func()
                 else:
                     # Try calling with **arguments

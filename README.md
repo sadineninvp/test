@@ -2,9 +2,9 @@
 
 Multi-phase implementation of a Computer Action Agent system with Command Center orchestration.
 
-## Current Status: Phase 4 Complete ✅
+## Current Status: Phase 4 Complete 
 
-### Phase 1: Computer Action Agent ✅
+### Phase 1: Computer Action Agent 
 Execution layer for system operations - a tool library that:
 - Executes shell commands safely
 - Manages system services (start, stop, restart, check)
@@ -14,7 +14,7 @@ Execution layer for system operations - a tool library that:
 
 **Important**: This is NOT an AI agent. It's just Python functions that execute commands.
 
-### Phase 2: Command Center (Hardcoded) ✅
+### Phase 2: Command Center (Hardcoded) 
 Routing and orchestration layer with hardcoded logic (no LLM):
 - Parses user requests using pattern matching
 - Routes to action plans (hardcoded mappings)
@@ -24,7 +24,7 @@ Routing and orchestration layer with hardcoded logic (no LLM):
 
 **Note**: Phase 2 is still available for testing without LLM costs.
 
-### Phase 3: Command Center (LLM-Powered) ✅
+### Phase 3: Command Center (LLM-Powered) 
 AI-powered routing using OpenAI function calling:
 - Uses LLM to understand natural language requests
 - LLM decides which Action Agent functions to call
@@ -34,7 +34,7 @@ AI-powered routing using OpenAI function calling:
 
 **Requirements**: OpenAI API key (set `OPENAI_API_KEY` environment variable)
 
-### Phase 4: Local Client (CLI) ✅
+### Phase 4: Local Client (CLI) 
 Command-line interface for end users:
 - Connects to Command Center API
 - Supports both Phase 2 and Phase 3 modes
@@ -226,73 +226,73 @@ python3 iqide.py "run ls" --json
 
 ```
 iqide/
-├── action_agent/                    # Phase 1: Execution Layer
-│   ├── __init__.py
-│   ├── command_executor.py          # Command execution
-│   ├── service_manager.py           # Service management
-│   ├── logger.py                    # Audit logging
-│   └── config.py                    # Configuration
-├── client/                          # Phase 4: Local Client
-│   ├── __init__.py
-│   ├── api_client.py               # HTTP client for Command Center
-│   ├── config.py                   # Configuration management
-│   ├── formatter.py                # Result formatting
-│   └── cli.py                      # CLI interface
-├── command_center/                  # Phase 2 & 3: Routing Layer
-│   ├── __init__.py
-│   ├── command_center.py            # Phase 2: Hardcoded routing
-│   ├── llm_command_center.py        # Phase 3: LLM-powered routing
-│   ├── llm_client.py                # Phase 3: OpenAI integration
-│   ├── tool_definitions.py          # Phase 3: Tool definitions for LLM
-│   ├── function_caller.py           # Phase 3: Execute LLM function calls
-│   ├── request_parser.py            # Phase 2: Parse user requests
-│   ├── action_router.py             # Phase 2: Route to action plans
-│   ├── orchestrator.py              # Phase 2: Execute plans
-│   ├── formatter.py                 # Format results
-│   └── api.py                       # FastAPI server (both phases)
-├── logs/                            # Generated logs
-│   ├── action_agent.log
-│   └── action_agent.db
-├── iqide.py                         # Phase 4: CLI entry point
-├── test_action_agent.py             # Phase 1 tests
-├── test_command_center.py           # Phase 2 tests
-├── test_llm_command_center.py       # Phase 3 tests
-├── test_client.py                   # Phase 4 tests
-├── requirements.txt                 # Dependencies
-└── README.md                        # This file
+ action_agent/                    # Phase 1: Execution Layer
+    __init__.py
+    command_executor.py          # Command execution
+    service_manager.py           # Service management
+    logger.py                    # Audit logging
+    config.py                    # Configuration
+ client/                          # Phase 4: Local Client
+    __init__.py
+    api_client.py               # HTTP client for Command Center
+    config.py                   # Configuration management
+    formatter.py                # Result formatting
+    cli.py                      # CLI interface
+ command_center/                  # Phase 2 & 3: Routing Layer
+    __init__.py
+    command_center.py            # Phase 2: Hardcoded routing
+    llm_command_center.py        # Phase 3: LLM-powered routing
+    llm_client.py                # Phase 3: OpenAI integration
+    tool_definitions.py          # Phase 3: Tool definitions for LLM
+    function_caller.py           # Phase 3: Execute LLM function calls
+    request_parser.py            # Phase 2: Parse user requests
+    action_router.py             # Phase 2: Route to action plans
+    orchestrator.py              # Phase 2: Execute plans
+    formatter.py                 # Format results
+    api.py                       # FastAPI server (both phases)
+ logs/                            # Generated logs
+    action_agent.log
+    action_agent.db
+ iqide.py                         # Phase 4: CLI entry point
+    test_action_agent.py             # Phase 1 tests
+    test_command_center.py           # Phase 2 tests
+    test_llm_command_center.py       # Phase 3 tests
+    test_client.py                   # Phase 4 tests
+    requirements.txt                 # Dependencies
+    README.md                        # This file
 ```
 
 ## Features
 
-### Phase 1: Action Agent ✅
-- ✅ Command execution with timeout and error handling
-- ✅ Service management (check, start, stop, restart)
-- ✅ Audit logging (file + SQLite database)
-- ✅ Cross-platform support (Linux, macOS, Windows)
+### Phase 1: Action Agent 
+-  Command execution with timeout and error handling
+-  Service management (check, start, stop, restart)
+-  Audit logging (file + SQLite database)
+-  Cross-platform support (Linux, macOS, Windows)
 
-### Phase 2: Command Center (Hardcoded) ✅
-- ✅ Request parsing (pattern matching)
-- ✅ Action routing (hardcoded mappings)
-- ✅ Multi-step orchestration
-- ✅ Result formatting
-- ✅ HTTP API (FastAPI)
-- ✅ Supported actions: restart_service, start_service, stop_service, check_service, run_command, list_services
+### Phase 2: Command Center (Hardcoded) 
+-  Request parsing (pattern matching)
+-  Action routing (hardcoded mappings)
+-  Multi-step orchestration
+-  Result formatting
+-  HTTP API (FastAPI)
+-  Supported actions: restart_service, start_service, stop_service, check_service, run_command, list_services
 
-### Phase 3: Command Center (LLM-Powered) ✅
-- ✅ OpenAI function calling integration
-- ✅ Natural language understanding
-- ✅ Intelligent tool selection by LLM
-- ✅ Multi-step planning and execution
-- ✅ Conversational requests
-- ✅ Same HTTP API with `use_llm=true` parameter
+### Phase 3: Command Center (LLM-Powered) 
+-  OpenAI function calling integration
+-  Natural language understanding
+-  Intelligent tool selection by LLM
+-  Multi-step planning and execution
+-  Conversational requests
+-  Same HTTP API with `use_llm=true` parameter
 
-### Phase 4: Local Client (CLI) ✅
-- ✅ Command-line interface
-- ✅ HTTP client for Command Center API
-- ✅ Configuration file management (`~/.iqide/config.json`)
-- ✅ Pretty and JSON output formats
-- ✅ Health check utility
-- ✅ Supports both Phase 2 and Phase 3 modes
+### Phase 4: Local Client (CLI) 
+-  Command-line interface
+-  HTTP client for Command Center API
+-  Configuration file management (`~/.iqide/config.json`)
+-  Pretty and JSON output formats
+-  Health check utility
+-  Supports both Phase 2 and Phase 3 modes
 
 ## Supported Request Patterns
 
@@ -313,28 +313,28 @@ The Command Center (Phase 2) supports these patterns:
 
 ## Next Steps
 
-- ✅ Phase 1: Computer Action Agent
-- ✅ Phase 2: Command Center (hardcoded routing)
-- ✅ Phase 3: Command Center (LLM-powered)
-- ✅ Phase 4: Local Client (CLI)
-- ⏭️ Future: Desktop GUI or IDE Extension (optional)
+-  Phase 1: Computer Action Agent
+-  Phase 2: Command Center (hardcoded routing)
+-  Phase 3: Command Center (LLM-powered)
+-  Phase 4: Local Client (CLI)
+-  Future: Desktop GUI or IDE Extension (optional)
 
 ## Using Phase 2 vs Phase 3
 
 **Phase 2 (Hardcoded):**
-- ✅ No API costs
-- ✅ Fast and predictable
-- ✅ Works offline
-- ❌ Limited to predefined patterns
-- ❌ Less flexible
+-  No API costs
+-  Fast and predictable
+-  Works offline
+-  Limited to predefined patterns
+-  Less flexible
 
 **Phase 3 (LLM-Powered):**
-- ✅ Understands natural language
-- ✅ Very flexible requests
-- ✅ Intelligent planning
-- ❌ Requires OpenAI API key
-- ❌ Has API costs
-- ❌ Slightly slower
+-  Understands natural language
+-  Very flexible requests
+-  Intelligent planning
+-  Requires OpenAI API key
+-  Has API costs
+-  Slightly slower
 
 **Recommendation**: Use Phase 2 for testing and simple workflows. Use Phase 3 for production and complex, flexible requests.
 
@@ -378,5 +378,4 @@ python3 iqide.py --config-set default_use_llm true
 
 ## Security Note
 
-⚠️ **Development Phase**: Currently no command restrictions. Add security restrictions before production use.
-
+ **Development Phase**: Currently no command restrictions. Add security restrictions before production use.

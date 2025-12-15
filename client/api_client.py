@@ -13,7 +13,7 @@ class CommandCenterClient:
     Uses persistent session to maintain cookies (for state persistence)
     """
     
-    def __init__(self, api_url: Optional[str] = None, timeout: int = 30, config: Optional[Config] = None):
+    def __init__(self, api_url: Optional[str] = None, timeout: int = 1800, config: Optional[Config] = None):
         """
         Initialize API client
         
@@ -133,7 +133,7 @@ class CommandCenterClient:
         try:
             response = self.session.get(
                 f"{self.api_url}/",
-                timeout=5
+                timeout=1800  # 30 minutes
             )
             return response.status_code == 200
         except Exception:

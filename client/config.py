@@ -46,7 +46,7 @@ class Config:
         default_config = {
             "api_url": "http://localhost:8000",
             "default_use_llm": False,
-            "timeout": 30,
+            "timeout": 1800,  # 30 minutes (1800 seconds)
             "output_format": "pretty"  # "pretty" or "json"
         }
         
@@ -81,7 +81,7 @@ class Config:
     
     def get_timeout(self) -> int:
         """Get request timeout"""
-        return self.config.get("timeout", 30)
+        return self.config.get("timeout", 1800)  # Default: 30 minutes
     
     def get_output_format(self) -> str:
         """Get output format"""

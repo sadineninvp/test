@@ -149,6 +149,62 @@ def get_tool_definitions() -> List[Dict[str, Any]]:
                 "properties": {},
                 "required": []
             }
+        },
+        {
+            "name": "read_file",
+            "description": "Read a file and return its contents. For code files (Python, JavaScript, etc.), also provides structure analysis including functions, classes, and imports. Use this when the user asks to 'show', 'view', 'read', 'see', or 'display' a file. The structure analysis helps understand code patterns. IMPORTANT: If the user says 'it', 'that file', or references a file without a path, check the context - it likely refers to the last file you showed them.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Path to the file (absolute or relative to current directory). If user says 'it' or 'that file', check the context provided at the start of the request - it will tell you the last file shown."
+                    },
+                    "analyze_structure": {
+                        "type": "boolean",
+                        "description": "Whether to analyze code structure (default: true for code files). Set to false if you only need raw content.",
+                        "default": True
+                    }
+                },
+                "required": ["file_path"]
+            }
+        },
+        {
+            "name": "write_file",
+            "description": "Write content to a file. Can create new files or overwrite existing ones. Use this when the user asks to 'write', 'create', 'save', or 'add to' a file.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Path to the file (absolute or relative to current directory)"
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "Content to write to the file"
+                    },
+                    "append": {
+                        "type": "boolean",
+                        "description": "If true, append to file; if false, overwrite (default: false)",
+                        "default": False
+                    }
+                },
+                "required": ["file_path", "content"]
+            }
+        },
+        {
+            "name": "list_files",
+            "description": "List files and directories in a directory. Returns file names and basic info (whether each item is a file or directory). Use this when the user asks to 'list', 'show files', or 'what's in' a directory.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "directory": {
+                        "type": "string",
+                        "description": "Directory path (defaults to current directory if not specified)"
+                    }
+                },
+                "required": []
+            }
         }
     ]
 
@@ -170,6 +226,9 @@ def get_tool_name_to_function_map() -> Dict[str, str]:
         "web_search": "web_search",
         "fetch_url": "fetch_url",
         "change_directory": "change_directory",
-        "get_current_directory": "get_current_directory"
+        "get_current_directory": "get_current_directory",
+        "read_file": "read_file",
+        "write_file": "write_file",
+        "list_files": "list_files"
     }
 
