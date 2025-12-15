@@ -126,6 +126,29 @@ def get_tool_definitions() -> List[Dict[str, Any]]:
                 },
                 "required": ["url"]
             }
+        },
+        {
+            "name": "change_directory",
+            "description": "Change the current working directory. This affects all subsequent commands until changed again. Use this when the user asks to navigate to a different directory, go into a folder, or change directories.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "Path to change to. Can be absolute (e.g., '/Users/name/Documents') or relative (e.g., '../parent' or 'subfolder')"
+                    }
+                },
+                "required": ["path"]
+            }
+        },
+        {
+            "name": "get_current_directory",
+            "description": "Get the current working directory. Use this when the user asks 'what directory am I in?', 'where am I?', or 'what is the current directory?'. Returns the absolute path of the current working directory.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
         }
     ]
 
@@ -145,6 +168,8 @@ def get_tool_name_to_function_map() -> Dict[str, str]:
         "restart_service": "restart_service",
         "get_system_info": "get_system_info",
         "web_search": "web_search",
-        "fetch_url": "fetch_url"
+        "fetch_url": "fetch_url",
+        "change_directory": "change_directory",
+        "get_current_directory": "get_current_directory"
     }
 

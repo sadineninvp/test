@@ -8,6 +8,7 @@ from typing import Optional, Dict, Any
 
 from .config import DEFAULT_TIMEOUT, MAX_OUTPUT_SIZE
 from .logger import ActionLogger
+from .state_manager import StateManager
 
 
 class CommandExecutor:
@@ -15,24 +16,32 @@ class CommandExecutor:
     Executes shell commands safely with logging and error handling
     """
     
-    def __init__(self, logger: Optional[ActionLogger] = None, timeout: int = DEFAULT_TIMEOUT):
+    def __init__(
+        self,
+        logger: Optional[ActionLogger] = None,
+        timeout: int = DEFAULT_TIMEOUT,
+        state_manager: Optional[StateManager] = None
+    ):
         """
         Initialize command executor
         
         Args:
             logger: ActionLogger instance (creates new one if not provided)
             timeout: Default timeout for commands in seconds
+            state_manager: StateManager instance (creates new one if not provided)
         """
         self.logger = logger or ActionLogger()
         self.timeout = timeout
         self.system = platform.system()  # 'Darwin', 'Linux', 'Windows'
+        self.state_manager = state_manager or StateManager()
     
     def run(
         self,
         command: str,
         timeout: Optional[int] = None,
         cwd: Optional[str] = None,
-        env: Optional[Dict[str, str]] = None
+        env: Optional[Dict[str, str]] = None,
+        use_state_directory: bool = True
     ) -> Dict[str, Any]:
         """
         Execute a shell command and return results
@@ -40,8 +49,9 @@ class CommandExecutor:
         Args:
             command: Command string to execute
             timeout: Timeout in seconds (uses instance default if not provided)
-            cwd: Working directory for command execution
+            cwd: Working directory for command execution (if None and use_state_directory=True, uses tracked directory)
             env: Environment variables (dict)
+            use_state_directory: If True and cwd is None, use tracked directory from StateManager
             
         Returns:
             Dict with keys:
@@ -185,5 +195,54 @@ class CommandExecutor:
             "platform": platform.platform(),
             "machine": platform.machine(),
             "processor": platform.processor()
+        }
+    
+    def change_directory(self, path: str) -> Dict[str, Any]:
+        """
+        Change the current working directory (affects future commands)
+        
+        Args:
+            path: Path to change to (absolute or relative)
+            
+        Returns:
+            Dict with execution result
+        """
+        result = self.state_manager.change_directory(path)
+        
+        # Log the action
+        if result["success"]:
+            self.logger.log(
+                action_type="directory",
+                action=f"change_directory('{path}')",
+                result=f"Changed to: {result['directory']}",
+                success=True,
+                metadata={
+                    "from": result.get("previous_directory"),
+                    "to": result["directory"]
+                }
+            )
+        else:
+            self.logger.log(
+                action_type="directory",
+                action=f"change_directory('{path}')",
+                result=None,
+                success=False,
+                error_message=result.get("error")
+            )
+        
+        return result
+    
+    def get_current_directory(self) -> Dict[str, Any]:
+        """
+        Get the current working directory
+        
+        Returns:
+            Dict with current directory
+        """
+        current_dir = self.state_manager.get_current_directory()
+        
+        return {
+            "success": True,
+            "directory": current_dir
         }
 

@@ -10,6 +10,7 @@ from .config import Config
 class CommandCenterClient:
     """
     HTTP client for Command Center API
+    Uses persistent session to maintain cookies (for state persistence)
     """
     
     def __init__(self, api_url: Optional[str] = None, timeout: int = 30, config: Optional[Config] = None):
@@ -24,6 +25,8 @@ class CommandCenterClient:
         self.config = config or Config()
         self.api_url = api_url or self.config.get_api_url()
         self.timeout = timeout or self.config.get_timeout()
+        # Use persistent session to maintain cookies across requests
+        self.session = requests.Session()
     
     def execute(
         self,
@@ -55,7 +58,8 @@ class CommandCenterClient:
         }
         
         try:
-            response = requests.post(
+            # Use session to maintain cookies (for state persistence)
+            response = self.session.post(
                 url,
                 json=payload,
                 timeout=self.timeout,
@@ -103,7 +107,7 @@ class CommandCenterClient:
     def get_supported_actions(self) -> Dict[str, Any]:
         """Get supported actions from API (Phase 2)"""
         try:
-            response = requests.get(
+            response = self.session.get(
                 f"{self.api_url}/api/supported-actions",
                 timeout=self.timeout
             )
@@ -115,7 +119,7 @@ class CommandCenterClient:
     def get_tools(self) -> Dict[str, Any]:
         """Get available tools from API (Phase 3)"""
         try:
-            response = requests.get(
+            response = self.session.get(
                 f"{self.api_url}/api/tools",
                 timeout=self.timeout
             )
@@ -127,7 +131,7 @@ class CommandCenterClient:
     def health_check(self) -> bool:
         """Check if API server is reachable"""
         try:
-            response = requests.get(
+            response = self.session.get(
                 f"{self.api_url}/",
                 timeout=5
             )

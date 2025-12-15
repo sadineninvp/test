@@ -43,6 +43,8 @@ class FunctionCaller:
             "get_system_info": self.executor.get_system_info,
             "web_search": self.web_tools.web_search,
             "fetch_url": self.web_tools.fetch_url,
+            "change_directory": self.executor.change_directory,
+            "get_current_directory": self.executor.get_current_directory,
         }
     
     def call_function(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
@@ -105,8 +107,11 @@ class FunctionCaller:
                     result = func(arguments["query"], max_results=max_results)
                 elif "url" in arguments:
                     result = func(arguments["url"])
+                elif "path" in arguments:
+                    # change_directory
+                    result = func(arguments["path"])
                 elif len(arguments) == 0:
-                    # No arguments (e.g., get_system_info)
+                    # No arguments (e.g., get_system_info, get_current_directory)
                     result = func()
                 else:
                     # Try calling with **arguments

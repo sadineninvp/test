@@ -95,13 +95,27 @@ uvicorn command_center.api:app --reload
 # Install dependencies first
 pip install -r requirements.txt
 
-# Use the client
+# Use the client (single commands)
 python3 iqide.py "what is my username?"
 python3 iqide.py "run ls -la" --no-llm
 python3 iqide.py "restart nginx" --llm
 
 # Check server health
 python3 iqide.py --health-check
+
+# Interactive session (for testing with state persistence)
+python3 interactive_test.py
+```
+
+**Interactive Session:**
+The interactive session maintains state across requests, so directory changes and other state persists:
+```bash
+python3 interactive_test.py
+
+iqide> what is the current directory?
+iqide> go to /Users
+iqide> what directory are you in?  # Will show /Users!
+iqide> exit
 ```
 
 ### Run API Server
