@@ -99,6 +99,7 @@ class ExecuteRequest(BaseModel):
     """Request model for execute endpoint"""
     request: str
     use_llm: Optional[bool] = False  # If True, use Phase 3 (LLM), else Phase 2 (hardcoded)
+    autonomous: Optional[bool] = False  # If True, use Phase 5 (Autonomous Agent)
 
 
 class ExecuteResponse(BaseModel):
@@ -121,12 +122,14 @@ async def root():
         "version": "0.3.0",
         "modes": {
             "phase2": "Hardcoded routing (always available)",
-            "phase3": f"LLM-powered routing ({'available' if has_llm else 'requires OPENAI_API_KEY'})"
+            "phase3": f"LLM-powered routing ({'available' if has_llm else 'requires OPENAI_API_KEY'})",
+            "phase5": f"Autonomous Agent ({'available' if has_llm else 'requires OPENAI_API_KEY'})"
         },
         "endpoints": {
-            "/api/execute": "POST - Execute a command (use_llm parameter to choose mode)",
+            "/api/execute": "POST - Execute a command (use_llm/autonomous parameters to choose mode)",
             "/api/supported-actions": "GET - List supported actions (Phase 2 only)",
-            "/api/tools": "GET - List available tools (Phase 3 only)"
+            "/api/tools": "GET - List available tools (Phase 3 only)",
+            "/api/approve": "POST - Approve pending operation (Phase 5 only)"
         }
     }
 
@@ -158,7 +161,78 @@ async def execute(
         # Set session cookie
         response.set_cookie(key="session_id", value=session_id, httponly=True)
         
-        if request.use_llm:
+        if request.autonomous:
+            # Phase 5: Autonomous Agent (LangGraph)
+            try:
+                from .autonomous.graph.graph import create_autonomous_agent_graph
+                from .autonomous.utils.checkpointer import get_checkpointer
+                from .autonomous.graph.state import from_conversation_state
+                from langchain_core.messages import HumanMessage
+                
+                # Create graph
+                graph = create_autonomous_agent_graph()
+                checkpointer = get_checkpointer()
+                compiled_graph = graph.compile(checkpointer=checkpointer)
+                
+                # Prepare initial state
+                conversation_state = session_data.get("conversation_state")
+                state_manager = session_data.get("state_manager")
+                initial_state = from_conversation_state(
+                    conversation_state,
+                    state_manager,
+                    session_id
+                )
+                
+                # Add user message
+                initial_state["messages"] = [HumanMessage(content=request.request)]
+                
+                # Thread config for checkpointing
+                thread_config = {"configurable": {"thread_id": session_id}}
+                
+                # Invoke graph
+                final_state = compiled_graph.invoke(initial_state, config=thread_config)
+                
+                # Extract result
+                summary = final_state.get("summary", "")
+                if not summary:
+                    # Get last assistant message
+                    messages = final_state.get("messages", [])
+                    for msg in reversed(messages):
+                        if isinstance(msg, dict) and msg.get("role") == "assistant":
+                            summary = msg.get("content", "")
+                            break
+                        elif hasattr(msg, "content"):
+                            summary = msg.content
+                            break
+                
+                result = {
+                    "success": len(final_state.get("errors", [])) == 0,
+                    "message": summary or "Task completed",
+                    "data": {
+                        "created_files": final_state.get("created_files", []),
+                        "modified_files": final_state.get("modified_files", []),
+                        "verification_results": final_state.get("verification_results"),
+                        "plan": final_state.get("plan"),
+                        "errors": final_state.get("errors", [])
+                    },
+                    "original_request": request.request,
+                    "mode": "autonomous",
+                    "session_id": session_id
+                }
+                
+                return ExecuteResponse(**result)
+                
+            except ImportError as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Autonomous agent not available. Install dependencies: {str(e)}"
+                )
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Autonomous agent error: {str(e)}"
+                )
+        elif request.use_llm:
             # Phase 3: LLM-powered with session
             center = get_command_center_v3(session_data=session_data)
             result = center.handle(request.request)
@@ -202,6 +276,73 @@ async def get_tools():
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+@app.post("/api/approve")
+async def approve_operation(
+    approval_id: str,
+    approved: bool,
+    session_id: Optional[str] = Cookie(None)
+):
+    """
+    Approve or reject a pending operation (Human-in-the-Loop)
+    
+    Args:
+        approval_id: Approval request ID
+        approved: True to approve, False to reject
+        session_id: Session ID from cookie
+        
+    Returns:
+        Status of approval
+    """
+    if not session_id:
+        raise HTTPException(status_code=400, detail="Session ID required")
+    
+    try:
+        from .autonomous.graph.graph import create_autonomous_agent_graph
+        from .autonomous.utils.checkpointer import get_checkpointer
+        
+        # Create graph
+        graph = create_autonomous_agent_graph()
+        checkpointer = get_checkpointer()
+        compiled_graph = graph.compile(checkpointer=checkpointer)
+        
+        # Thread config
+        thread_config = {"configurable": {"thread_id": session_id}}
+        
+        # Load current state
+        current_state = compiled_graph.get_state(thread_config)
+        
+        if not current_state or not current_state.values:
+            raise HTTPException(status_code=404, detail="No pending operation found")
+        
+        state_values = current_state.values
+        
+        # Update approval status
+        state_values["approval_status"] = "approved" if approved else "rejected"
+        state_values["requires_approval"] = False
+        
+        # Update state
+        compiled_graph.update_state(thread_config, state_values)
+        
+        # Resume execution if approved
+        if approved:
+            # The graph will resume from HIL node
+            result = compiled_graph.invoke(None, config=thread_config)
+            return {
+                "success": True,
+                "message": "Operation approved and resumed",
+                "approved": True
+            }
+        else:
+            return {
+                "success": True,
+                "message": "Operation rejected",
+                "approved": False
+            }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing approval: {str(e)}")
 
 
 if __name__ == "__main__":
